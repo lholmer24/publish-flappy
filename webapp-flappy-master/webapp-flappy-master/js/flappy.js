@@ -14,7 +14,6 @@ var labelScore;
 var pipes = [];
 var highscore = 0;
 var rotation = 0;
-var spincount = 0;
 //set variables for the game
 
 
@@ -34,7 +33,8 @@ function create() {
     //add the background
     player = game.add.sprite(40, 20, "flappy");
     //add the bird
-    game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(playerJump);
+    game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(function(){player.body.velocity.y = -220});
+        //cause the player to jump
     //take input
     labelScore = game.add.text(20, 20, "0");
     //add the score
@@ -57,13 +57,9 @@ function create() {
 function update() {
 
 
-  if(spincount == 20){
-    rotation = 0;
-  }
-  else {
-    spincount++;
-  }
-  //player.angle += rotation;
+  player.rotation = Math.atan(player.body.velocity.y / 200);
+
+  player.angle += rotation;
 
   game.physics.arcade.overlap(player, pipes, gameOver);
   //detect collision
@@ -88,26 +84,19 @@ function changeScore() {
 }
 
 
-function playerJump() {
-    player.body.velocity.y = -220;
-    spincount = 0;
-    rotation = 3;
-    //cause the player to jump
-}
-
 
 function generatePipe() {
-    var gaplength = game.rnd.integerInRange(4, 12);
-    var gapStart = game.rnd.integerInRange(1, 17 - gaplength);
+    var gaplength = game.rnd.integerInRange(100, 350);
+    var gapStart = game.rnd.integerInRange(25, 375 - gaplength);
     //select where the gap starts
-    for(var i=0; i<18; i++){
-        if(i < gapStart || i > gapStart + gaplength - 1){
-            addPipeBlock(950, 25 * i);
+    for(var i=0; i<425; i++){
+        if(i + 24 < gapStart || i > gapStart + gaplength - 1){
+            addPipeBlock(950, i);
 
         }
     }
-    addPipeTop(948, (gapStart * 25) - 12);
-    addPipeBottom(948, (gapStart + gaplength) * 25);
+    addPipeTop(948, gapStart - 12);
+    addPipeBottom(948, gapStart + gaplength);
     //loop for the creation of the pipe, calls the functions
     changeScore();
 }
@@ -155,6 +144,5 @@ function gameOver(){
       "<div>" + "Highscore: " + highscore + "</div>"
       );
     }
-    spincount = 20;
     //reset the game when the loss function is called
 }
