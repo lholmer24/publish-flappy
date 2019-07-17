@@ -19,7 +19,7 @@ var rotation = 0;
 
 //Loads all resources for the game and gives them names.
 function preload() {
-    game.load.image("backgroundImg", "../assets/bg1.jpg");
+    game.load.image("backgroundImg", "../assets/bg2.jpg");
     game.load.image("flappy", "../assets/flappy-cropped.png");
     game.load.image("pipeBlock","../assets/pipe2-body.png");
     game.load.image("pipeEnd","../assets/pipe2-end.png");
@@ -29,37 +29,58 @@ function preload() {
 //Initialises the game. This function is only called once.
 
 function create() {
-    game.add.image(0, 0, "backgroundImg");
+    var backgroundSprite = game.add.tileSprite(0, 0, 950, 450, "backgroundImg");
+    backgroundSprite.autoScroll( -100, 0);
+
     //add the background
     player = game.add.sprite(40, 20, "flappy");
     //add the bird
-    game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(function(){player.body.velocity.y = -220});
-        //cause the player to jump
-    //take input
+
     labelScore = game.add.text(20, 20, "0");
     //add the score
     game.physics.startSystem(Phaser.Physics.ARCADE);
     //start physics
     game.physics.arcade.enable(player);
     //add physics to the player
-    player.body.gravity.y = 350;
-    //add gravity
-    generatePipe();
-    //generate the pipes
-    var pipeInterval = 1.5 * Phaser.Timer.SECOND;
-    //set a timer
-    game.time.events.loop(pipeInterval, generatePipe);
+    splashDisplay = game.add.text(200,200, "Press ENTER to start, SPACEBAR to jump");
+
     //create a loop to generate pipes on the timer
     player.anchor.setTo(0.5, 0.5);
+    game.input.keyboard.addKey(Phaser.Keyboard.ENTER).onDown.add(start);
+
 }
 
 //This function updates the scene. It is called for every new frame.
+function start(){
+  game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(function(){player.body.velocity.y = -220});
+      //cause the player to jump
+  //take input
+  player.body.gravity.y = 350;
+  //add gravity
+  generatePipe();
+  //generate the pipes
+  var pipeInterval = 1.5 * Phaser.Timer.SECOND;
+  //set a timer
+  game.time.events.loop(pipeInterval, generatePipe);
+  splashDisplay.destroy();
+
+  game.input.keyboard.addKey(Phaser.Keyboard.ENTER).onDown.remove(start);
+}
+
+
 function update() {
 
 
   player.rotation = Math.atan(player.body.velocity.y / 200);
 
   player.angle += rotation;
+
+  for(var i = pipes.length - 1; i >= 0; i--) {
+      if(pipes[i].body.x < -52){
+        pipes[i].destroy();
+        pipes.splice(i, 1);
+      }
+  }
 
   game.physics.arcade.overlap(player, pipes, gameOver);
   //detect collision
