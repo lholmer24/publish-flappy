@@ -1,0 +1,160 @@
+// the Game object used by the phaser.io library
+var stateActions = { preload: preload, create: create, update: update };
+
+// Phaser parameters:
+// - game width
+// - game height
+// - renderer (go for Phaser.AUTO)
+// - element where the game will be drawn ('game')
+// - actions on the game state (or null for nothing)
+var game = new Phaser.Game(950, 450, Phaser.AUTO, 'game', stateActions);
+var player;
+var score = 0;
+var labelScore;
+var pipes = [];
+var highscore = 0;
+var rotation = 0;
+var spincount = 0;
+//set variables for the game
+
+
+//Loads all resources for the game and gives them names.
+function preload() {
+    game.load.image("backgroundImg", "../assets/bg1.jpg");
+    game.load.image("flappy", "../assets/flappy-cropped.png");
+    game.load.image("pipeBlock","../assets/pipe2-body.png");
+    game.load.image("pipeEnd","../assets/pipe2-end.png");
+
+}
+
+//Initialises the game. This function is only called once.
+
+function create() {
+    game.add.image(0, 0, "backgroundImg");
+    //add the background
+    player = game.add.sprite(40, 20, "flappy");
+    //add the bird
+    game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(playerJump);
+    //take input
+    labelScore = game.add.text(20, 20, "0");
+    //add the score
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+    //start physics
+    game.physics.arcade.enable(player);
+    //add physics to the player
+    player.body.gravity.y = 350;
+    //add gravity
+    generatePipe();
+    //generate the pipes
+    var pipeInterval = 1.5 * Phaser.Timer.SECOND;
+    //set a timer
+    game.time.events.loop(pipeInterval, generatePipe);
+    //create a loop to generate pipes on the timer
+    player.anchor.setTo(0.5, 0.5);
+}
+
+//This function updates the scene. It is called for every new frame.
+function update() {
+
+
+  if(spincount == 20){
+    rotation = 0;
+  }
+  else {
+    spincount++;
+  }
+  //player.angle += rotation;
+
+  game.physics.arcade.overlap(player, pipes, gameOver);
+  //detect collision
+
+  if(player.y > 450){
+      gameOver()
+  //detect falling down the bottom
+  }
+
+  else if(player.y < -50){
+    gameOver()
+  //detect flying to high
+  }
+
+}
+
+
+function changeScore() {
+    score++;
+    labelScore.setText("Score = " + score.toString());
+    //increment the score and update the counter
+}
+
+
+function playerJump() {
+    player.body.velocity.y = -220;
+    spincount = 0;
+    rotation = 3;
+    //cause the player to jump
+}
+
+
+function generatePipe() {
+    var gaplength = game.rnd.integerInRange(4, 12);
+    var gapStart = game.rnd.integerInRange(1, 17 - gaplength);
+    //select where the gap starts
+    for(var i=0; i<18; i++){
+        if(i < gapStart || i > gapStart + gaplength - 1){
+            addPipeBlock(950, 25 * i);
+
+        }
+    }
+    addPipeTop(948, (gapStart * 25) - 12);
+    addPipeBottom(948, (gapStart + gaplength) * 25);
+    //loop for the creation of the pipe, calls the functions
+    changeScore();
+}
+
+function addPipeBlock(x, y) {
+    // create a new pipe block
+    var block = game.add.sprite(x,y,"pipeBlock");
+    // insert it in the 'pipes' array
+    pipes.push(block);
+    game.physics.arcade.enable(block);
+    block.body.velocity.x = -200;
+    //enable physics and move the pipe
+}
+
+function addPipeTop(x, y) {
+    // create a new pipe block
+    var pipeTop = game.add.sprite(x, y, "pipeEnd");
+    // insert it in the 'pipes' array
+    pipes.push(pipeTop);
+    game.physics.arcade.enable(pipeTop);
+    pipeTop.body.velocity.x = -200;
+    //enable physics and move the pipe
+}
+
+function addPipeBottom(x, y) {
+    // create a new pipe block
+    var pipeBottom = game.add.sprite(x, y, "pipeEnd");
+    // insert it in the 'pipes' array
+    pipes.push(pipeBottom);
+    game.physics.arcade.enable(pipeBottom);
+    pipeBottom.body.velocity.x = -200;
+    //enable physics and move the pipe
+}
+
+function gameOver(){
+    game.state.restart();
+    if(score > highscore){
+        highscore = score;
+    }
+    registerScore(highscore);
+    score = 0;
+    if(mostRecent == 1){
+      jQuery("#content").empty();
+      jQuery("#content").append(
+      "<div>" + "Highscore: " + highscore + "</div>"
+      );
+    }
+    spincount = 20;
+    //reset the game when the loss function is called
+}
